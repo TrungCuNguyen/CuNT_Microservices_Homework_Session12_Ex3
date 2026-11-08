@@ -108,3 +108,4 @@ class ProductFlashSaleConcurrencyTest {
         assertEquals(0, finalProduct.getStockQuantity(), "Tồn kho cuối cùng trong Database phải bằng đúng 0");
     }
 }
+
