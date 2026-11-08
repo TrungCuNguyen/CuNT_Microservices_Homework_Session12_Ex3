@@ -13,6 +13,8 @@ public interface ProductService {
 
     ProductResponseDTO updateProduct(Long id, ProductRequestDTO requestDTO);
 
+    ProductResponseDTO purchaseProductFlashSale(Long productId, Integer quantity);
+
     void deleteProduct(Long id);
 
     List<ProductResponseDTO> getAllProducts();

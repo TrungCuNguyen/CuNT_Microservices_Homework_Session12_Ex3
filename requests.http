@@ -30,6 +30,15 @@ Accept: application/json
 GET http://localhost:8081/api/v1/products
 Accept: application/json
 
+### 1.6 Đặt mua Flash Sale với Redisson Distributed Lock (lock:product:{id})
+# Khách hàng giành được khóa phân tán để kiểm tra tồn kho và trừ số lượng
+POST http://localhost:8081/api/v1/products/1/purchase?quantity=1
+Accept: application/json
+
+### 1.7 Mua Flash Sale khi hết hàng -> Nhận thông báo "Sản phẩm đã hết hàng"
+POST http://localhost:8081/api/v1/products/1/purchase?quantity=999
+Accept: application/json
+
 
 ### ==============================================================================
 ### PHẦN 2: BÀI TẬP KAFKA EVENT-DRIVEN (ORDER / EMAIL / INVENTORY SERVICES)

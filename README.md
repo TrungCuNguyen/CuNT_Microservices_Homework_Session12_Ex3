@@ -1,8 +1,9 @@
 # Hệ Thống Microservices: Redis Cache & Kafka Event-Driven Architecture
 
-Dự án bao gồm 2 bài toán kiến trúc Microservices quan trọng:
+Dự án bao gồm 3 bài toán kiến trúc Microservices quan trọng:
 1. **Bài toán 1: Tối ưu hóa hiển thị sản phẩm với Redis Cache** (`product-service` - Port 8081)
-2. **Bài toán 2: Bất đồng bộ hóa luồng Đặt hàng với Apache Kafka** (`order-service` - Port 8082, `email-service` - Port 8083, `inventory-service` - Port 8084)
+2. **Bài toán 2: Chống bán vượt (Overselling) trong Flash Sale với Redisson Distributed Lock** (`product-service` - Port 8081)
+3. **Bài toán 3: Bất đồng bộ hóa luồng Đặt hàng với Apache Kafka** (`order-service` - Port 8082, `email-service` - Port 8083, `inventory-service` - Port 8084)
 
 ---
 
@@ -33,7 +34,15 @@ ex_ss12_micro/
 - **@Cacheable**: Lần 1 truy vấn Database (~200ms) rồi nạp vào Redis; các lần sau lấy từ Redis (<10ms).
 - **@CacheEvict**: Tự động xóa cache Redis khi quản trị viên cập nhật (`PUT /api/v1/products/{id}`) hoặc xóa sản phẩm.
 
-### Bài toán 2: Kafka Event-Driven Architecture (`order-service` / `email-service` / `inventory-service`)
+### Bài toán 2: Khóa phân tán Redisson Distributed Lock (`product-service`)
+- **Bối cảnh**: Trong đợt Flash Sale, sản phẩm chỉ còn 1 chiếc nhưng 100 người cùng bấm mua cùng một thời điểm. Không có khóa phân tán sẽ gây lỗi bán vượt tồn kho (Overselling / Race condition).
+- **Yêu cầu kỹ thuật**:
+  - Dùng **Redisson** tạo khóa phân tán với định dạng key: `lock:product:{id}`.
+  - Khi đặt mua (`POST /api/v1/products/{id}/purchase`), luồng phải giành được khóa mới được phép kiểm tra tồn kho và trừ số lượng.
+  - Luôn mở khóa (`unlock`) trong khối `finally` để tránh deadlock/treo hệ thống.
+  - **Kết quả mong muốn**: Chỉ đúng số lượng người mua bằng số lượng tồn kho thực tế thành công, còn lại nhận thông báo: `"Sản phẩm đã hết hàng"`.
+
+### Bài toán 3: Kafka Event-Driven Architecture (`order-service` / `email-service` / `inventory-service`)
 - **Bối cảnh**: Khi khách hàng bấm "Đặt hàng", nếu thực hiện đồng bộ (lưu đơn, trừ kho, gửi mail) khách hàng sẽ phải chờ rất lâu.
 - **Giải pháp**:
   - **`order-service` (Producer)**: Lưu đơn hàng vào DB với trạng thái `CREATED`, bắn sự kiện `OrderCreatedEvent` vào Kafka topic `order-events` và phản hồi ngay `HTTP 201 Created` cho khách hàng mà không cần chờ.

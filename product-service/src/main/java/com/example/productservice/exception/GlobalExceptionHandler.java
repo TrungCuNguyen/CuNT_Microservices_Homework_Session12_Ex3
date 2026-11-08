@@ -24,6 +24,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(OutOfStockException.class)
+    public ResponseEntity<Map<String, Object>> handleOutOfStockException(OutOfStockException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", HttpStatus.CONFLICT.value());
+        error.put("error", "Out Of Stock");
+        error.put("message", ex.getMessage());
+        error.put("timestamp", LocalDateTime.now());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();

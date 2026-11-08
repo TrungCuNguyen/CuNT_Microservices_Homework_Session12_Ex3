@@ -60,6 +60,22 @@ public class ProductController {
         );
     }
 
+    /**
+     * API đặt mua sản phẩm trong đợt Flash Sale áp dụng Redisson Distributed Lock.
+     * Đảm bảo chỉ đúng số lượng người mua bằng số lượng tồn kho thực tế thành công,
+     * còn lại nhận thông báo "Sản phẩm đã hết hàng".
+     */
+    @PostMapping("/{id}/purchase")
+    public ResponseEntity<ApiResponse<ProductResponseDTO>> purchaseProductFlashSale(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "1") Integer quantity) {
+        ProductResponseDTO responseDTO = productService.purchaseProductFlashSale(id, quantity);
+        return ResponseEntity.ok(ApiResponse.success(
+                responseDTO,
+                "Đặt mua sản phẩm thành công! Tồn kho còn lại: " + responseDTO.getStockQuantity()
+        ));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductResponseDTO>> updateProduct(
             @PathVariable Long id,
